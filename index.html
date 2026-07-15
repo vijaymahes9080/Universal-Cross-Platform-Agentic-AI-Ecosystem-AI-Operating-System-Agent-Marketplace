@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>U-AIX OS - Universal Agentic AI Operating System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Top System Navigation Bar -->
+    <header class="system-navbar">
+        <div class="system-title">
+            <span>U-AIX OS</span> v1.0.0-Beta
+        </div>
+        <nav class="navbar-nav">
+            <button class="nav-btn active" data-view="dashboard">Workspace</button>
+            <button class="nav-btn" data-view="marketplace">Marketplace</button>
+            <button class="nav-btn" data-view="builder">Skill Builder</button>
+            <button class="nav-btn" data-view="memory">Memory Vault</button>
+            <button class="nav-btn" data-view="router">Router Settings</button>
+            <button class="nav-btn" data-view="documentation">Documentation Hub</button>
+        </nav>
+        <div class="system-metrics">
+            <div class="metric-item">
+                <span class="metric-dot" id="ollama-status-dot"></span>
+                <span id="ollama-status-label">Local Node Active</span>
+            </div>
+            <div class="metric-item">
+                <span>CPU:</span> <strong style="color: var(--accent-cyan)" id="system-cpu-val">14%</strong>
+            </div>
+            <div class="metric-item">
+                <span>VRAM:</span> <strong style="color: var(--accent-violet)" id="system-vram-val">4.2 GB</strong>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="app-container">
+        
+        <!-- ================= WORKSPACE DASHBOARD VIEW ================= -->
+        <div class="page-view active" id="dashboard-view" style="flex: 1; display: flex; gap: 16px;">
+            <!-- Left Sidebar Status -->
+            <aside class="sidebar">
+                <!-- System Active Agent Nodes -->
+                <div class="glass-panel" style="flex: 1;">
+                    <div class="panel-header">Active Agents</div>
+                    <div class="agent-list" id="active-agents-list">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- Installed System Skills -->
+                <div class="glass-panel">
+                    <div class="panel-header">Installed Skills</div>
+                    <div class="skill-grid" id="skills-grid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Main Shell Workspace -->
+            <section class="workspace-view">
+                <div class="glass-panel terminal-panel">
+                    <div class="terminal-header">
+                        <div class="terminal-controls">
+                            <span class="dot dot-red"></span>
+                            <span class="dot dot-amber"></span>
+                            <span class="dot dot-green"></span>
+                        </div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); font-family: var(--font-mono)">
+                            Active Router Model: <span id="router-active-model" style="color: var(--accent-cyan)">U-AIX Engine Simulator</span>
+                        </div>
+                    </div>
+                    
+                    <div class="terminal-logs" id="terminal-logs">
+                        <div class="log-entry system">[SYSTEM] Welcome to U-AIX OS — The world's first local-first, free, and open-source AI Operating System.</div>
+                        <div class="log-entry system">[SYSTEM] No external registration required. Running locally on sandbox.</div>
+                        <div class="log-entry system">[SYSTEM] Type an intent in the shell below to trigger autonomous agent execution networks. (e.g. "Create WebScraper skill" or "Decompose project goals")</div>
+                    </div>
+
+                    <div class="terminal-prompt-line">
+                        <span class="terminal-caret">U-AIX://shell$</span>
+                        <input type="text" class="terminal-input-bar" id="terminal-input" placeholder="Type user intent and press Enter..." autofocus autocomplete="off">
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= MARKETPLACE VIEW ================= -->
+        <div class="page-view" id="marketplace-view" style="flex: 1; flex-direction: column;">
+            <div class="glass-panel" style="margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <h2>U-AIX Open-Source Registry Marketplace</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px;">
+                            Search and install secure, sandboxed skills and collaborative agent configurations. Zero pricing, 100% auditable source code.
+                        </p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="market-search" class="input-field" placeholder="Search registry..." style="width: 200px;">
+                        <select id="market-filter-type" class="input-field" style="width: 120px;">
+                            <option value="all">All Tiers</option>
+                            <option value="agent">Agents Only</option>
+                            <option value="skill">Skills Only</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="market-grid" id="marketplace-grid">
+                <!-- Rendered by JS -->
+            </div>
+        </div>
+
+        <!-- ================= SKILL BUILDER VIEW ================= -->
+        <div class="page-view" id="builder-view" style="flex: 1; display: flex; gap: 16px;">
+            <section style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel" style="flex: 1; position: relative;">
+                    <div class="panel-header">Skill Manifest & Sandbox Compiler</div>
+                    
+                    <div class="builder-layout">
+                        <!-- Left pane: Configuration fields -->
+                        <div class="builder-fields">
+                            <div class="form-group">
+                                <label for="skill-name">Skill Name</label>
+                                <input type="text" id="skill-name" class="input-field" placeholder="e.g. ImageOptimizer" value="ImageOptimizer">
+                            </div>
+                            <div class="form-group">
+                                <label for="skill-version">Version</label>
+                                <input type="text" id="skill-version" class="input-field" placeholder="e.g. 1.0.0" value="1.0.0">
+                            </div>
+                            <div class="form-group">
+                                <label for="skill-desc">Description</label>
+                                <textarea id="skill-desc" class="input-field" style="height: 60px; resize: none;" placeholder="What does this skill do?">Compresses and scales local images inside sandbox.</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>Sandbox Permissions</label>
+                                <div class="permission-grid">
+                                    <label class="check-container">
+                                        <input type="checkbox" id="perm-network" checked> Allow Network Access
+                                    </label>
+                                    <label class="check-container">
+                                        <input type="checkbox" id="perm-fs"> Allow File System
+                                    </label>
+                                    <label class="check-container">
+                                        <input type="checkbox" id="perm-process"> Allow Subprocesses
+                                    </label>
+                                    <label class="check-container">
+                                        <input type="checkbox" id="perm-clip" checked> Allow Clipboard API
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right pane: Code editor -->
+                        <div class="builder-editor">
+                            <div class="editor-header">
+                                <span>sandbox_runtime.js</span>
+                            </div>
+                            <textarea id="skill-code" class="input-field code-editor" spellcheck="false">// Declare entrypoint skill handler
+@skill({
+    name: "ImageOptimizer",
+    version: "1.0.0"
+})
+async function optimize(context, filepath, quality = 80) {
+    const file = await context.fs.readFile(filepath);
+    context.log("Compressing image buffer...");
+    
+    // Simulating WASM canvas operation
+    const output = await context.wasm.run("img_compress", file, { quality });
+    return {
+        outputPath: filepath.replace(/\.[^/.]+$/, "") + "_opt.jpg",
+        sizeReduction: "45%"
+    };
+}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Compiler Scan overlay panel -->
+                    <div id="compiler-scan-overlay" class="scan-overlay">
+                        <div class="scan-content">
+                            <div class="scan-spinner"></div>
+                            <div class="scan-title">Analyzing AST Safety...</div>
+                            <div class="scan-status" id="scan-status-text">Checking permission leaks...</div>
+                            <div class="scan-progress-bar"><div class="scan-progress-fill" id="scan-progress-fill"></div></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; display: flex; gap: 12px; justify-content: flex-end;">
+                        <button class="nav-btn" id="builder-reset-btn" style="border: 1px solid var(--border-color);">Reset Template</button>
+                        <button class="primary-btn" id="builder-compile-btn">Compile & Register Skill</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= MEMORY VAULT VIEW ================= -->
+        <div class="page-view" id="memory-view" style="flex: 1; display: flex; gap: 16px;">
+            <!-- Left panel: Form, options & local tokens list -->
+            <section style="width: 320px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="panel-header">Semantic Tokens List</div>
+                    <div class="memory-explorer-list" id="memory-list" style="flex: 1; overflow-y: auto;">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+                <div class="glass-panel">
+                    <div class="panel-header">Inject Memory Node</div>
+                    <form id="add-memory-form" class="memory-creator">
+                        <input type="text" id="memory-input" class="input-field" placeholder="Enter key details or context...">
+                        <select id="memory-type" class="input-field" style="max-width: 100px;">
+                            <option value="personal">Personal</option>
+                            <option value="team">Team</option>
+                            <option value="knowledge">Knowledge</option>
+                        </select>
+                        <button type="submit" class="primary-btn">+</button>
+                    </form>
+                    
+                    <!-- Form to add custom relations -->
+                    <div class="relation-creator" style="margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600;">LINK SEMANTIC NODES</div>
+                        <div style="display: flex; flex-direction: column; gap: 6px;">
+                            <select id="relation-source" class="input-field" style="font-size: 0.75rem;"></select>
+                            <select id="relation-type" class="input-field" style="font-size: 0.75rem;">
+                                <option value="RELATED_TO">related to</option>
+                                <option value="MEMBER_OF">member of</option>
+                                <option value="DEPENDS_ON">depends on</option>
+                                <option value="CREATED_BY">created by</option>
+                            </select>
+                            <select id="relation-target" class="input-field" style="font-size: 0.75rem;"></select>
+                            <button id="add-relation-btn" class="primary-btn" style="padding: 4px; font-size: 0.75rem;">Create Relation</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Center panel: Semantic memory force graph canvas -->
+            <section style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="panel-header">
+                        <span>Interactive Memory Graph Network</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: none;">Drag nodes to orient, scroll to zoom</span>
+                    </div>
+                    <div style="flex: 1; position: relative; border-radius: 12px; overflow: hidden;">
+                        <canvas id="memory-graph-canvas" style="display: block; width: 100%; height: 100%; cursor: grab; background: #050508; border: 1px solid var(--border-color); border-radius: 12px;"></canvas>
+                        
+                        <!-- Mini details tooltip inside canvas area -->
+                        <div id="graph-tooltip" style="position: absolute; display: none; background: rgba(10,10,15,0.95); border: 1px solid var(--accent-cyan); padding: 8px 12px; border-radius: 8px; font-size: 0.8rem; pointer-events: none; max-width: 250px; z-index: 10; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right panel: Sovereignty operations -->
+            <aside class="sidebar" style="width: 240px;">
+                <div class="glass-panel" style="flex: 1;">
+                    <div class="panel-header">Memory Sovereignty</div>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                        Unlike commercial cloud models, your memory indexes are encrypted and saved strictly in your local sandbox browser.
+                    </p>
+                    <blockquote style="font-size: 0.8rem; background: rgba(255,255,255,0.02); padding: 8px; border-left: 3px solid var(--accent-cyan); border-radius: 4px; margin-bottom: 16px;">
+                        Path: <code>localStorage/IndexedDB</code>
+                    </blockquote>
+                    <button class="primary-btn" style="width: 100%; background: var(--accent-red); margin-bottom: 8px;" id="purge-memory-btn">Purge Memory Vault</button>
+                    <button class="nav-btn" style="width: 100%; border: 1px solid var(--border-color); text-align: center; justify-content: center;" id="export-memory-btn">Export Backup (JSON)</button>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ================= ROUTER SETTINGS VIEW ================= -->
+        <div class="page-view" id="router-view" style="flex: 1; display: flex; gap: 16px;">
+            <section style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel">
+                    <h2>Multi-Model Router Metrics</h2>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 4px; margin-bottom: 16px;">
+                        Configure connection to your locally running Ollama or Llama.cpp servers. Running locally ensures 100% open source operations and $0 API consumption.
+                    </p>
+                    <div class="router-stats-grid">
+                        <div class="stat-box">
+                            <span class="stat-value" id="metrics-cost-val">$0.00</span>
+                            <span class="stat-label">Monthly Cost</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="metrics-speed-val">58 t/s</span>
+                            <span class="stat-label">Generation Speed</span>
+                        </div>
+                        <div class="stat-box">
+                            <span class="stat-value" id="metrics-latency-val">12 ms</span>
+                            <span class="stat-label">Model Latency</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" style="flex: 1; min-height: 250px; display: flex; flex-direction: column;">
+                    <div class="panel-header">Live Telemetry & Resource Graph</div>
+                    <div style="flex: 1; position: relative; min-height: 180px;">
+                        <canvas id="router-metrics-canvas" style="display: block; width: 100%; height: 100%; background: #06060a; border-radius: 12px; border: 1px solid var(--border-color);"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Configuration Sidebar -->
+            <aside class="sidebar" style="width: 320px;">
+                <div class="glass-panel" style="flex: 1;">
+                    <div class="panel-header">FOSS Local LLM Config</div>
+                    <div class="settings-form">
+                        <div class="form-group">
+                            <label for="ollama-host">Ollama Server API URL</label>
+                            <input type="text" id="ollama-host" class="input-field" value="http://localhost:11434">
+                        </div>
+                        <div class="form-group">
+                            <label for="ollama-model">Active Local Model Target</label>
+                            <input type="text" id="ollama-model" class="input-field" value="llama3">
+                        </div>
+                        <button class="primary-btn" id="save-settings-btn" style="margin-top: 10px; width: 100%;">Connect & Verify Link</button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ================= DOCUMENTATION HUB VIEW ================= -->
+        <div class="page-view" id="documentation-view" style="flex: 1;">
+            <div class="glass-panel" style="flex: 1; overflow: hidden;">
+                <div class="doc-hub-container">
+                    <aside class="doc-sidebar" id="doc-menu-list">
+                        <!-- Rendered by JS -->
+                    </aside>
+                    <article class="doc-content-viewer" id="doc-viewer">
+                        <!-- Rendered by JS -->
+                    </article>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Source Code / Manifest Inspector Modal -->
+    <div id="inspector-modal" class="modal-overlay">
+        <div class="modal-card glass-panel">
+            <div class="modal-header">
+                <h3 id="inspector-title">Inspect Package Source</h3>
+                <span class="close-btn" id="inspector-close-btn">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-tabs">
+                    <button class="modal-tab-btn active" data-tab="manifest">manifest.json</button>
+                    <button class="modal-tab-btn" data-tab="source">entrypoint.js</button>
+                </div>
+                <div class="modal-tab-content">
+                    <pre><code id="inspector-code-block"></code></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="primary-btn" id="inspector-install-btn">Install Package</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
