@@ -204,6 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTerminal();
     initDocHub();
     initSkillBuilder();
+    initOrchestrator();
     checkOllamaConnection();
 
     // Start background canvas loops
@@ -252,6 +253,8 @@ function switchView(viewId) {
         resizeMemoryCanvas();
     } else if (viewId === 'router') {
         resizeRouterCanvas();
+    } else if (viewId === 'orchestrator') {
+        drawCurrentDAG();
     }
 }
 
@@ -1850,6 +1853,741 @@ function drawTelemetry() {
     ctx.restore();
 }
 
+// ==========================================================================
+// DAG ORCHESTRATOR SIMULATOR IMPLEMENTATION
+// ==========================================================================
+
+let currentPreset = 'developer';
+let dagSteps = [];
+let currentDAGStepIndex = -1;
+let dagSimInterval = null;
+let dagCost = 0.0;
+let isDagSimRunning = false;
+let isDagSimPaused = false;
+let customDAGCtr = 1;
+
+function initOrchestrator() {
+    const presetSelect = document.getElementById('dag-preset');
+    const customPromptContainer = document.getElementById('dag-custom-prompt-container');
+    const compileBtn = document.getElementById('dag-compile-btn');
+    const runBtn = document.getElementById('dag-run-btn');
+    const resetBtn = document.getElementById('dag-reset-btn');
+    const allowBtn = document.getElementById('dag-hitl-allow');
+    const denyBtn = document.getElementById('dag-hitl-deny');
+    const regBundleBtn = document.getElementById('dag-register-bundle-btn');
+    const downBundleBtn = document.getElementById('dag-download-bundle-btn');
+
+    if (presetSelect) {
+        presetSelect.addEventListener('change', (e) => {
+            currentPreset = e.target.value;
+            if (currentPreset === 'custom') {
+                customPromptContainer.style.display = 'block';
+            } else {
+                customPromptContainer.style.display = 'none';
+            }
+        });
+    }
+
+    if (compileBtn) {
+        compileBtn.addEventListener('click', () => {
+            compileActiveMission();
+        });
+    }
+
+    if (runBtn) {
+        runBtn.addEventListener('click', () => {
+            if (isDagSimRunning) {
+                if (isDagSimPaused) {
+                    resumeDAGSimulation();
+                } else {
+                    pauseDAGSimulation();
+                }
+            } else {
+                startDAGSimulation();
+            }
+        });
+    }
+
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            resetDAGSimulation();
+        });
+    }
+
+    if (allowBtn) {
+        allowBtn.addEventListener('click', () => {
+            handleHitlApproval(true);
+        });
+    }
+
+    if (denyBtn) {
+        denyBtn.addEventListener('click', () => {
+            handleHitlApproval(false);
+        });
+    }
+
+    if (regBundleBtn) {
+        regBundleBtn.addEventListener('click', () => {
+            registerDAGAsSkill();
+        });
+    }
+
+    if (downBundleBtn) {
+        downBundleBtn.addEventListener('click', () => {
+            downloadDAGManifest();
+        });
+    }
+
+    // Load initial layout
+    compileActiveMission();
+}
+
+function compileActiveMission() {
+    resetDAGSimulation();
+    
+    const preset = document.getElementById('dag-preset').value;
+    const customPrompt = document.getElementById('dag-custom-prompt').value || "Custom Agent Task";
+    
+    dagSteps = [];
+    
+    const chatStream = document.getElementById('dag-chat-stream');
+    if (chatStream) {
+        chatStream.innerHTML = '';
+    }
+    
+    if (preset === 'developer') {
+        dagSteps = [
+            { id: 'planner', name: 'Planner Agent', subtitle: 'planner.agent', icon: '🧠', x: 40, y: 150, status: 'pending', role: 'planner', info: 'Decomposes intent and sets constraints.' },
+            { id: 'researcher', name: 'Research Agent', subtitle: 'researcher.agent', icon: '🔍', x: 230, y: 60, status: 'pending', role: 'researcher', info: 'Gathers context metadata and documentation.' },
+            { id: 'coder', name: 'Coder Agent', subtitle: 'coder.agent', icon: '💻', x: 230, y: 240, status: 'pending', role: 'coder', info: 'Generates secure sandbox execution scripts.' },
+            { id: 'validator', name: 'Validator Agent', subtitle: 'validator.agent', icon: '🛡️', x: 420, y: 150, status: 'pending', role: 'validator', info: 'Validates code syntax and sandbox compliance.' },
+            { id: 'deployer', name: 'Deployer Skill', subtitle: 'deploy.wasm', icon: '🚀', x: 610, y: 150, status: 'pending', role: 'deployer', info: 'Installs package into local Registry.' }
+        ];
+        dagSteps.edges = [
+            { from: 'planner', to: 'researcher' },
+            { from: 'planner', to: 'coder' },
+            { from: 'researcher', to: 'validator' },
+            { from: 'coder', to: 'validator' },
+            { from: 'validator', to: 'deployer' }
+        ];
+        dagSteps.dialogue = [
+            { role: 'planner', msg: "Analyzing mission: Develop a secure AES-GCM encryption skill. Decomposing workflow: Research Agent will retrieve API parameters; Coder Agent will build the sandbox logic; Validator Agent will run security scans." },
+            { role: 'researcher', msg: "Querying Memory Vault... Found AES template documentation (Ref: MV-3) and dependency schema configurations. Sending context payloads." },
+            { role: 'coder', msg: "Context received. Generating safe WASM buffer structure for AES-GCM (256-bit). Compiling runtime module checks..." },
+            { role: 'validator', msg: "Commencing compiler security AST scans. Checking for eval/system injection bypass... CLEAN. Validating sandboxed runtime bindings..." },
+            { role: 'deployer', msg: "AST verified. Initializing registry injection. Workspace skill registered successfully: WasmSecureCrypto v1.0.0." }
+        ];
+    } else if (preset === 'feedback') {
+        dagSteps = [
+            { id: 'planner', name: 'Planner Agent', subtitle: 'planner.agent', icon: '🧠', x: 40, y: 150, status: 'pending', role: 'planner', info: 'Decomposes intent and sets constraints.' },
+            { id: 'csv_analyst', name: 'CSV Analyst Skill', subtitle: 'csv_analyst.js', icon: '📊', x: 230, y: 60, status: 'pending', role: 'coder', info: 'Parses local customer feedback datasets.' },
+            { id: 'vault_query', name: 'Memory Vault', subtitle: 'vault_query.js', icon: '🔍', x: 230, y: 240, status: 'pending', role: 'researcher', info: 'Performs semantic similarity scans.' },
+            { id: 'validator', name: 'Validator Agent', subtitle: 'validator.agent', icon: '🛡️', x: 420, y: 150, status: 'pending', role: 'validator', info: 'Calculates cosine similarity distance scores.' },
+            { id: 'reporter', name: 'Output Reporter', subtitle: 'report_maker.js', icon: '📝', x: 610, y: 150, status: 'pending', role: 'deployer', info: 'Formats markdown reports for outliers.' }
+        ];
+        dagSteps.edges = [
+            { from: 'planner', to: 'csv_analyst' },
+            { from: 'planner', to: 'vault_query' },
+            { from: 'csv_analyst', to: 'validator' },
+            { from: 'vault_query', to: 'validator' },
+            { from: 'validator', to: 'reporter' }
+        ];
+        dagSteps.dialogue = [
+            { role: 'planner', msg: "Analyzing mission: Analyze customer feedback dataset. Splitting DAG: CSV Analyst extracts tables; Memory Vault pulls historical profiles; Validator parses distance metrics." },
+            { role: 'coder', msg: "Executing local file system read. Parsing feedback.csv... Extracted 42 records. Isolating feedback texts." },
+            { role: 'researcher', msg: "Scanning local vector indexes matching negative flags: [error, crash, delay]. Extracted 4 template profiles." },
+            { role: 'validator', msg: "Matching content. Row #12 has 94.2% semantic similarity to historical crash profiles. Flagging outlier entry." },
+            { role: 'deployer', msg: "Writing summary reports. Flagged 1 outlier. Saved results matrix to workspace memory." }
+        ];
+    } else if (preset === 'security') {
+        dagSteps = [
+            { id: 'planner', name: 'Planner Agent', subtitle: 'planner.agent', icon: '🧠', x: 40, y: 150, status: 'pending', role: 'planner', info: 'Decomposes intent and sets constraints.' },
+            { id: 'auditor', name: 'System Auditor', subtitle: 'auditor.js', icon: '🔍', x: 230, y: 60, status: 'pending', role: 'coder', info: 'Checks config file baselines.' },
+            { id: 'keys_scan', name: 'TPM Keys Scan', subtitle: 'tpm_keys.js', icon: '🔑', x: 230, y: 240, status: 'pending', role: 'researcher', info: 'Scans cryptographic signature enclaves. (Requires HITL)' },
+            { id: 'validator', name: 'Validator Agent', subtitle: 'validator.agent', icon: '🛡️', x: 420, y: 150, status: 'pending', role: 'validator', info: 'Compares credentials signature validation hashes.' },
+            { id: 'console', name: 'Security Console', subtitle: 'console.wasm', icon: '💻', x: 610, y: 150, status: 'pending', role: 'deployer', info: 'Renders system security scorecard metrics.' }
+        ];
+        dagSteps.edges = [
+            { from: 'planner', to: 'auditor' },
+            { from: 'planner', to: 'keys_scan' },
+            { from: 'auditor', to: 'validator' },
+            { from: 'keys_scan', to: 'validator' },
+            { from: 'validator', to: 'console' }
+        ];
+        dagSteps.dialogue = [
+            { role: 'planner', msg: "Analyzing mission: Cryptographic security audit. Mapping tasks: Auditor examines configurations; TPM Keys Scan audits enclaves. (Checkpoint: Human Consent)." },
+            { role: 'coder', msg: "Scanning local project env profiles. File audits complete. Zero plain-text credentials found. SSL/TLS version: 1.3." },
+            { role: 'researcher', msg: "[HITL CHECKSUM] Requesting read access to local TPM chip key hashes. Awaiting user consent..." }
+        ];
+    } else {
+        let s2Name = "Data Scraper Skill";
+        let s3Name = "Data Parser Skill";
+        let s2Sub = "scraper.js";
+        let s3Sub = "parser.js";
+        let s2Icon = "🔍";
+        let s3Icon = "⚙️";
+
+        const lowerPrompt = customPrompt.toLowerCase();
+        if (lowerPrompt.includes('web') || lowerPrompt.includes('scrape') || lowerPrompt.includes('crawler')) {
+            s2Name = "Web Scraper Skill";
+            s2Sub = "crawler.js";
+            s2Icon = "🌐";
+            s3Name = "Content Extractor";
+            s3Sub = "extractor.js";
+            s3Icon = "📝";
+        } else if (lowerPrompt.includes('finance') || lowerPrompt.includes('stock') || lowerPrompt.includes('crypto') || lowerPrompt.includes('price')) {
+            s2Name = "Market Data Feed";
+            s2Sub = "market_data.js";
+            s2Icon = "📈";
+            s3Name = "Financial Planner";
+            s3Sub = "portfolio.js";
+            s3Icon = "📊";
+        } else if (lowerPrompt.includes('database') || lowerPrompt.includes('sql') || lowerPrompt.includes('db')) {
+            s2Name = "SQL Query Skill";
+            s2Sub = "sql_query.js";
+            s2Icon = "💾";
+            s3Name = "JSON Formatter";
+            s3Sub = "json_out.js";
+            s3Icon = "🔧";
+        }
+
+        dagSteps = [
+            { id: 'planner', name: 'Planner Agent', subtitle: 'planner.agent', icon: '🧠', x: 40, y: 150, status: 'pending', role: 'planner', info: 'Decomposes intent and sets constraints.' },
+            { id: 'step_2', name: s2Name, subtitle: s2Sub, icon: s2Icon, x: 230, y: 60, status: 'pending', role: 'researcher', info: 'Custom gathered data step.' },
+            { id: 'step_3', name: s3Name, subtitle: s3Sub, icon: s3Icon, x: 230, y: 240, status: 'pending', role: 'coder', info: 'Custom logic parsing step.' },
+            { id: 'validator', name: 'Validator Agent', subtitle: 'validator.agent', icon: '🛡️', x: 420, y: 150, status: 'pending', role: 'validator', info: 'Validates code syntax and sandbox compliance.' },
+            { id: 'deployer', name: 'Custom Publisher', subtitle: 'publish.wasm', icon: '🚀', x: 610, y: 150, status: 'pending', role: 'deployer', info: 'Publishes outcome data to dashboard.' }
+        ];
+        dagSteps.edges = [
+            { from: 'planner', to: 'step_2' },
+            { from: 'planner', to: 'step_3' },
+            { from: 'step_2', to: 'validator' },
+            { from: 'step_3', to: 'validator' },
+            { from: 'validator', to: 'deployer' }
+        ];
+        dagSteps.dialogue = [
+            { role: 'planner', msg: `Analyzing custom mission: "${customPrompt}". Decomposing workflow: Initiating custom gathering via ${s2Name}; parsing logic via ${s3Name}.` },
+            { role: 'researcher', msg: `Executing custom retrieve loops for ${s2Name}... Gathering payloads.` },
+            { role: 'coder', msg: `Running custom JS sandbox algorithms in ${s3Name}. Transforming dataset.` },
+            { role: 'validator', msg: "Validating custom task outputs against JSON schemas... Checklist passed." },
+            { role: 'deployer', msg: "Publishing custom task outcomes. Event handler added to system console." }
+        ];
+    }
+    
+    currentDAGStepIndex = -1;
+    drawCurrentDAG();
+    
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) {
+        runBtn.disabled = false;
+        runBtn.innerText = "Run Simulation";
+    }
+    
+    const stateVal = document.getElementById('dag-state');
+    if (stateVal) {
+        stateVal.innerText = "Compiled";
+        stateVal.style.color = "var(--accent-cyan)";
+    }
+    const indicatorVal = document.getElementById('dag-step-indicator');
+    if (indicatorVal) {
+        indicatorVal.innerText = `0 / ${dagSteps.length}`;
+    }
+}
+
+function drawCurrentDAG() {
+    const svg = document.getElementById('dag-svg');
+    if (!svg) return;
+    
+    const defs = svg.querySelector('defs');
+    svg.innerHTML = '';
+    if (defs) {
+        svg.appendChild(defs);
+    } else {
+        const newDefs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        newDefs.innerHTML = `
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(255,255,255,0.25)" />
+            </marker>
+            <marker id="arrow-active" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#06b6d4" />
+            </marker>
+        `;
+        svg.appendChild(newDefs);
+    }
+    
+    if (dagSteps.edges) {
+        dagSteps.edges.forEach(edge => {
+            const fromNode = dagSteps.find(n => n.id === edge.from);
+            const toNode = dagSteps.find(n => n.id === edge.to);
+            if (fromNode && toNode) {
+                const x1 = fromNode.x + 150;
+                const y1 = fromNode.y + 25;
+                const x2 = toNode.x;
+                const y2 = toNode.y + 25;
+                
+                const dx = x2 - x1;
+                const pathData = `M ${x1} ${y1} C ${x1 + dx/2} ${y1}, ${x2 - dx/2} ${y2}, ${x2} ${y2}`;
+                
+                const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathEl.setAttribute('d', pathData);
+                
+                const isFromActive = fromNode.status === 'success' || fromNode.status === 'running';
+                const isToActive = toNode.status === 'running' || toNode.status === 'success';
+                
+                pathEl.setAttribute('class', `dag-edge ${isFromActive ? 'active' : ''}`);
+                pathEl.setAttribute('marker-end', isToActive ? 'url(#arrow-active)' : 'url(#arrow)');
+                svg.appendChild(pathEl);
+                
+                if (fromNode.status === 'success' && toNode.status === 'running') {
+                    const flowEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    flowEl.setAttribute('d', pathData);
+                    flowEl.setAttribute('class', 'dag-edge-flow');
+                    svg.appendChild(flowEl);
+                }
+            }
+        });
+    }
+    
+    dagSteps.forEach((node, index) => {
+        const group = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        group.setAttribute('class', `dag-node ${node.status}`);
+        group.setAttribute('transform', `translate(0, 0)`);
+        
+        group.addEventListener('mouseenter', (e) => showNodeTooltip(e, node));
+        group.addEventListener('mouseleave', hideNodeTooltip);
+        
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('class', 'dag-node-rect');
+        rect.setAttribute('x', node.x);
+        rect.setAttribute('y', node.y);
+        rect.setAttribute('width', 150);
+        rect.setAttribute('height', 50);
+        group.appendChild(rect);
+        
+        const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        icon.setAttribute('class', 'dag-node-icon');
+        icon.setAttribute('x', node.x + 12);
+        icon.setAttribute('y', node.y + 31);
+        icon.textContent = node.icon;
+        group.appendChild(icon);
+        
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        title.setAttribute('class', 'dag-node-title');
+        title.setAttribute('x', node.x + 38);
+        title.setAttribute('y', node.y + 23);
+        title.textContent = node.name;
+        group.appendChild(title);
+        
+        const subtitle = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        subtitle.setAttribute('class', 'dag-node-subtitle');
+        subtitle.setAttribute('x', node.x + 38);
+        subtitle.setAttribute('y', node.y + 39);
+        subtitle.textContent = node.subtitle;
+        group.appendChild(subtitle);
+        
+        svg.appendChild(group);
+    });
+}
+
+function showNodeTooltip(e, node) {
+    const tooltip = document.getElementById('dag-node-tooltip');
+    if (!tooltip) return;
+    
+    let statusColor = 'var(--text-muted)';
+    if (node.status === 'running') statusColor = 'var(--accent-cyan)';
+    else if (node.status === 'success') statusColor = 'var(--accent-green)';
+    else if (node.status === 'suspended') statusColor = 'var(--accent-amber)';
+    else if (node.status === 'failed') statusColor = 'var(--accent-red)';
+    
+    tooltip.innerHTML = `
+        <div style="font-weight: 600; margin-bottom: 4px; color: ${statusColor}">${node.name}</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">Status: <span style="text-transform: uppercase; font-weight: bold; color: ${statusColor}">${node.status}</span></div>
+        <div style="font-size: 0.75rem; color: var(--text-primary); line-height: 1.3;">${node.info}</div>
+    `;
+    
+    const container = document.getElementById('dag-canvas-container');
+    const rect = container.getBoundingClientRect();
+    const x = e.clientX - rect.left + 15;
+    const y = e.clientY - rect.top + 15;
+    
+    tooltip.style.left = `${x}px`;
+    tooltip.style.top = `${y}px`;
+    tooltip.style.display = 'block';
+}
+
+function hideNodeTooltip() {
+    const tooltip = document.getElementById('dag-node-tooltip');
+    if (tooltip) {
+        tooltip.style.display = 'none';
+    }
+}
+
+function startDAGSimulation() {
+    isDagSimRunning = true;
+    isDagSimPaused = false;
+    currentDAGStepIndex = 0;
+    
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) {
+        runBtn.innerText = "Pause Simulation";
+    }
+    const stateVal = document.getElementById('dag-state');
+    if (stateVal) {
+        stateVal.innerText = "Running";
+        stateVal.style.color = "var(--accent-cyan)";
+    }
+    
+    runNextDAGStep();
+}
+
+function pauseDAGSimulation() {
+    isDagSimPaused = true;
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) {
+        runBtn.innerText = "Resume Simulation";
+    }
+    const stateVal = document.getElementById('dag-state');
+    if (stateVal) {
+        stateVal.innerText = "Paused";
+        stateVal.style.color = "var(--accent-amber)";
+    }
+}
+
+function resumeDAGSimulation() {
+    isDagSimPaused = false;
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) {
+        runBtn.innerText = "Pause Simulation";
+    }
+    const stateVal = document.getElementById('dag-state');
+    if (stateVal) {
+        stateVal.innerText = "Running";
+        stateVal.style.color = "var(--accent-cyan)";
+    }
+    
+    runNextDAGStep();
+}
+
+function resetDAGSimulation() {
+    isDagSimRunning = false;
+    isDagSimPaused = false;
+    currentDAGStepIndex = -1;
+    dagCost = 0.0;
+    
+    if (dagSimInterval) {
+        clearTimeout(dagSimInterval);
+        dagSimInterval = null;
+    }
+    
+    const hitlPanel = document.getElementById('dag-hitl-panel');
+    if (hitlPanel) hitlPanel.style.display = 'none';
+    
+    const resCard = document.getElementById('dag-result-card');
+    if (resCard) resCard.style.display = 'none';
+    
+    dagSteps.forEach(node => {
+        node.status = 'pending';
+    });
+    
+    drawCurrentDAG();
+    
+    const costText = document.getElementById('dag-cost');
+    if (costText) costText.innerText = "$0.0000";
+    
+    const tokenText = document.getElementById('dag-tokens');
+    if (tokenText) tokenText.innerText = "0 tokens/sec";
+    
+    const stepText = document.getElementById('dag-step-indicator');
+    if (stepText) stepText.innerText = `0 / ${dagSteps.length}`;
+    
+    const stateText = document.getElementById('dag-state');
+    if (stateText) {
+        stateText.innerText = "Idle";
+        stateText.style.color = "var(--text-muted)";
+    }
+    
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) {
+        runBtn.innerText = "Run Simulation";
+    }
+    
+    const chatStream = document.getElementById('dag-chat-stream');
+    if (chatStream) {
+        chatStream.innerHTML = `
+            <div class="chat-placeholder" style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 40px; padding: 20px;">
+                Compile a mission above to establish the multi-agent communication tunnel.
+            </div>
+        `;
+    }
+}
+
+function runNextDAGStep() {
+    if (!isDagSimRunning || isDagSimPaused) return;
+    
+    if (currentDAGStepIndex >= dagSteps.length) {
+        completeDAGSimulation();
+        return;
+    }
+    
+    const node = dagSteps[currentDAGStepIndex];
+    
+    if (node.id === 'keys_scan' && node.status !== 'success') {
+        suspendForHITL();
+        return;
+    }
+    
+    node.status = 'running';
+    drawCurrentDAG();
+    
+    const stepText = document.getElementById('dag-step-indicator');
+    if (stepText) stepText.innerText = `${currentDAGStepIndex + 1} / ${dagSteps.length}`;
+    
+    const speedPeak = 45 + Math.floor(Math.random() * 15);
+    const tokenText = document.getElementById('dag-tokens');
+    if (tokenText) tokenText.innerText = `${speedPeak} tokens/sec`;
+    
+    dagCost += 0.0002 + (Math.random() * 0.0001);
+    const costText = document.getElementById('dag-cost');
+    if (costText) costText.innerText = `$${dagCost.toFixed(4)}`;
+    
+    if (dagSteps.dialogue && dagSteps.dialogue[currentDAGStepIndex]) {
+        const d = dagSteps.dialogue[currentDAGStepIndex];
+        appendAgentMessage(d.role, d.msg);
+    } else {
+        const randomMessages = [
+            "Decomposing complex DAG constraints.",
+            "Analyzing dataset matrices and processing variables.",
+            "Applying target safety analyzer checks on sandbox.",
+            "Validating execution payload against schema thresholds.",
+            "Exporting results database."
+        ];
+        appendAgentMessage(node.role, randomMessages[currentDAGStepIndex % randomMessages.length]);
+    }
+    
+    dagSimInterval = setTimeout(() => {
+        node.status = 'success';
+        currentDAGStepIndex++;
+        drawCurrentDAG();
+        
+        runNextDAGStep();
+    }, 2800);
+}
+
+function suspendForHITL() {
+    const node = dagSteps[currentDAGStepIndex];
+    node.status = 'suspended';
+    drawCurrentDAG();
+    
+    const stateText = document.getElementById('dag-state');
+    if (stateText) {
+        stateText.innerText = "Suspended";
+        stateText.style.color = "var(--accent-amber)";
+    }
+    
+    const hitlPanel = document.getElementById('dag-hitl-panel');
+    const hitlMessage = document.getElementById('dag-hitl-message');
+    if (hitlMessage) {
+        hitlMessage.innerHTML = `Researcher Agent wishes to access TPM keys located at secure memory vault <code>TPM_HASH_KEYSTORE</code>. Allow access?`;
+    }
+    if (hitlPanel) {
+        hitlPanel.style.display = 'flex';
+    }
+    
+    appendAgentMessage('researcher', "[REQUEST] Security checkpoint: Awaiting explicit developer credential keys audit consent.");
+}
+
+function handleHitlApproval(approved) {
+    const hitlPanel = document.getElementById('dag-hitl-panel');
+    if (hitlPanel) hitlPanel.style.display = 'none';
+    
+    const node = dagSteps[currentDAGStepIndex];
+    if (approved) {
+        appendAgentMessage('researcher', "[APPROVED] User granted read access to TPM_HASH_KEYSTORE. Commencing credentials search.");
+        node.status = 'success';
+        currentDAGStepIndex++;
+        
+        isDagSimPaused = false;
+        const runBtn = document.getElementById('dag-run-btn');
+        if (runBtn) runBtn.innerText = "Pause Simulation";
+        const stateText = document.getElementById('dag-state');
+        if (stateText) {
+            stateText.innerText = "Running";
+            stateText.style.color = "var(--accent-cyan)";
+        }
+        
+        runNextDAGStep();
+    } else {
+        appendAgentMessage('researcher', "[DENIED] Access to TPM key repositories was aborted by user.");
+        node.status = 'failed';
+        drawCurrentDAG();
+        
+        isDagSimRunning = false;
+        const runBtn = document.getElementById('dag-run-btn');
+        if (runBtn) runBtn.disabled = true;
+        const stateText = document.getElementById('dag-state');
+        if (stateText) {
+            stateText.innerText = "Failed";
+            stateText.style.color = "var(--accent-red)";
+        }
+        
+        appendAgentMessage('planner', "[CRITICAL] Mission halted. Dependency TPM key scan failed safety checks due to credentials block.");
+    }
+}
+
+function completeDAGSimulation() {
+    isDagSimRunning = false;
+    
+    const runBtn = document.getElementById('dag-run-btn');
+    if (runBtn) runBtn.disabled = true;
+    const stateText = document.getElementById('dag-state');
+    if (stateText) {
+        stateText.innerText = "Completed";
+        stateText.style.color = "var(--accent-green)";
+    }
+    const tokenText = document.getElementById('dag-tokens');
+    if (tokenText) tokenText.innerText = "0 tokens/sec";
+    
+    const resultCard = document.getElementById('dag-result-card');
+    const resultDesc = document.getElementById('dag-result-description');
+    
+    if (resultCard) resultCard.style.display = 'flex';
+    
+    const preset = document.getElementById('dag-preset').value;
+    if (resultDesc) {
+        if (preset === 'developer') {
+            resultDesc.innerText = "AES Cryptographic Module created and sandbox AST safety checks verified. Ready to register package WasmSecureCrypto.";
+        } else if (preset === 'feedback') {
+            resultDesc.innerText = "Semantic feedback report compiled. 1 Crash outlier detected and saved into Memory Vault database index.";
+        } else if (preset === 'security') {
+            resultDesc.innerText = "Cryptographic credentials scan completed. 100% security coverage baseline confirmed.";
+        } else {
+            resultDesc.innerText = "Custom mission executed. Agent package output compiles successfully.";
+        }
+    }
+}
+
+function appendAgentMessage(role, text) {
+    const stream = document.getElementById('dag-chat-stream');
+    if (!stream) return;
+    
+    const placeholder = stream.querySelector('.chat-placeholder');
+    if (placeholder) {
+        placeholder.remove();
+    }
+    
+    const msg = document.createElement('div');
+    msg.className = 'agent-msg';
+    
+    let avatarChar = '🧠';
+    let label = 'Planner';
+    if (role === 'researcher') { avatarChar = '🔍'; label = 'Researcher'; }
+    else if (role === 'coder') { avatarChar = '💻'; label = 'Coder'; }
+    else if (role === 'validator') { avatarChar = '🛡️'; label = 'Validator'; }
+    else if (role === 'deployer') { avatarChar = '🚀'; label = 'Deployer'; }
+    
+    msg.innerHTML = `
+        <div class="agent-avatar ${role}">${avatarChar}</div>
+        <div class="agent-bubble">
+            <div class="agent-name">${label} Agent</div>
+            <div class="agent-text">${text}</div>
+        </div>
+    `;
+    
+    stream.appendChild(msg);
+    stream.scrollTop = stream.scrollHeight;
+}
+
+function registerDAGAsSkill() {
+    const preset = document.getElementById('dag-preset').value;
+    let name = "CustomMissionSkill";
+    let desc = "Custom generated skill by DAG Orchestrator.";
+    
+    if (preset === 'developer') {
+        name = "WasmSecureCrypto";
+        desc = "AES-GCM (256-bit) file encryptor sandbox module.";
+    } else if (preset === 'feedback') {
+        name = "FeedbackAnalyzer";
+        desc = "Customer reviews parser and similarity scanner.";
+    } else if (preset === 'security') {
+        name = "CryptoKeysAuditor";
+        desc = "TPM credential registers and system variables scan.";
+    }
+    
+    if (!UAIX_STATE.customSkills) {
+        UAIX_STATE.customSkills = [];
+    }
+    
+    const exists = UAIX_STATE.customSkills.some(s => s.name === name) || UAIX_STATE.installedSkills.includes(name.toLowerCase());
+    if (exists) {
+        alert(`Skill "${name}" is already registered in this workspace.`);
+        return;
+    }
+    
+    const id = name.toLowerCase();
+    const newSkill = {
+        id: id,
+        name: name,
+        desc: desc,
+        version: "1.0.0"
+    };
+    
+    UAIX_STATE.customSkills.push(newSkill);
+    UAIX_STATE.installedSkills.push(id);
+    saveState();
+    
+    renderSkillsGrid();
+    
+    alert(`Success! "${name}" has been registered as an active workspace skill. You can view it in the Dashboard's Installed Skills.`);
+}
+
+function downloadDAGManifest() {
+    const preset = document.getElementById('dag-preset').value;
+    let manifestName = "custom_mission_agent";
+    let manifestData = {
+        name: manifestName,
+        version: "1.0.0",
+        description: "Custom DAG Orchestrated Skill Module.",
+        permissions: ["sandbox_execute"],
+        dependencies: []
+    };
+    
+    if (preset === 'developer') {
+        manifestData = {
+            name: "WasmSecureCrypto",
+            version: "1.0.0",
+            description: "AES-GCM (256-bit) local file encryption module.",
+            permissions: ["file_system", "cryptography"],
+            dependencies: ["sql-engine"]
+        };
+        manifestName = "wasm_secure_crypto";
+    } else if (preset === 'feedback') {
+        manifestData = {
+            name: "FeedbackAnalyzer",
+            version: "1.0.0",
+            description: "Analyses feedback CSV documents and retrieves matches.",
+            permissions: ["file_system", "memory_vault"],
+            dependencies: ["csv-analyst"]
+        };
+        manifestName = "feedback_analyzer";
+    } else if (preset === 'security') {
+        manifestData = {
+            name: "CryptoKeysAuditor",
+            version: "1.0.0",
+            description: "Audits TPM registers and matches local signature key hash.",
+            permissions: ["tpm_read", "network_baseline"],
+            dependencies: []
+        };
+        manifestName = "crypto_keys_auditor";
+    }
+    
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(manifestData, null, 4));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `${manifestName}_manifest.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
 
 // Pre-compiled short descriptions/snippets for when CORS blocks fetching files (e.g. double clicking index.html directly)
 const FALLBACK_DOCS = {

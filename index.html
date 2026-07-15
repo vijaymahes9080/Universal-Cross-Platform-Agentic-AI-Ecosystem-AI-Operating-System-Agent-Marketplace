@@ -11,12 +11,13 @@
     <!-- Top System Navigation Bar -->
     <header class="system-navbar">
         <div class="system-title">
-            <span>U-AIX OS</span> v1.0.0-Beta
+            <span>U-AIX OS</span>
         </div>
         <nav class="navbar-nav">
             <button class="nav-btn active" data-view="dashboard">Workspace</button>
             <button class="nav-btn" data-view="marketplace">Marketplace</button>
             <button class="nav-btn" data-view="builder">Skill Builder</button>
+            <button class="nav-btn" data-view="orchestrator">Orchestrator</button>
             <button class="nav-btn" data-view="memory">Memory Vault</button>
             <button class="nav-btn" data-view="router">Router Settings</button>
             <button class="nav-btn" data-view="documentation">Documentation Hub</button>
@@ -192,6 +193,115 @@ async function optimize(context, filepath, quality = 80) {
                     </div>
                 </div>
             </section>
+        </div>
+
+        <!-- ================= DAG ORCHESTRATOR VIEW ================= -->
+        <div class="page-view" id="orchestrator-view" style="flex: 1; display: flex; gap: 16px;">
+            <!-- Left panel: Controls & Stats -->
+            <section style="width: 320px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel">
+                    <div class="panel-header">DAG Configuration</div>
+                    <div class="form-group">
+                        <label for="dag-preset">Select Mission Preset</label>
+                        <select id="dag-preset" class="input-field">
+                            <option value="developer">Autonomous Developer Package</option>
+                            <option value="feedback">Feedback Semantic Analyzer</option>
+                            <option value="security">Identity Cryptographic Audit</option>
+                            <option value="custom">Custom Agent Mission</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="dag-custom-prompt-container" style="display: none;">
+                        <label for="dag-custom-prompt">Custom Mission Goal</label>
+                        <textarea id="dag-custom-prompt" class="input-field" style="height: 60px; resize: none;" placeholder="e.g. Scrape stock prices and run analysis..."></textarea>
+                    </div>
+                    <button class="primary-btn" id="dag-compile-btn" style="width: 100%; margin-top: 8px;">Compile Mission & Build DAG</button>
+                </div>
+
+                <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column;">
+                    <div class="panel-header">Execution Metrics</div>
+                    <div class="metrics-list" style="flex: 1; display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem; padding-top: 10px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                            <span class="text-muted">Workflow State:</span>
+                            <span id="dag-state" style="color: var(--accent-cyan); font-weight: 600;">Idle</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                            <span class="text-muted">Active Model:</span>
+                            <span id="dag-model" style="color: var(--accent-violet);">llama3 (Local Node)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                            <span class="text-muted">Estimated Compute Cost:</span>
+                            <span id="dag-cost" style="color: var(--accent-green); font-weight: 600;">$0.0000</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                            <span class="text-muted">Token Throttling Rate:</span>
+                            <span id="dag-tokens">0 tokens/sec</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">
+                            <span class="text-muted">Execution Step:</span>
+                            <span id="dag-step-indicator" style="font-family: var(--font-mono)">0 / 0</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 16px; display: flex; gap: 8px;">
+                        <button class="primary-btn" id="dag-run-btn" disabled style="flex: 1;">Run Simulation</button>
+                        <button class="nav-btn" id="dag-reset-btn" style="border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 0 12px;">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Center Panel: Interactive Node Graph Arena -->
+            <section style="flex: 1; display: flex; flex-direction: column; gap: 16px; position: relative;">
+                <div class="glass-panel" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                    <div class="panel-header">
+                        <span>Autonomous Task Decomposition DAG</span>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); text-transform: none;">Nodes represent isolated sandbox tasks</span>
+                    </div>
+                    
+                    <!-- SVG DAG Container -->
+                    <div class="dag-svg-container" id="dag-canvas-container" style="flex: 1; position: relative; background: #050508; border-radius: 12px; border: 1px solid var(--border-color); overflow: auto;">
+                        <svg id="dag-svg" width="100%" height="100%" style="min-width: 600px; min-height: 400px; display: block; position: absolute; top:0; left:0;"></svg>
+                        
+                        <!-- Floating HTML Tooltip overlay inside DAG container -->
+                        <div id="dag-node-tooltip" class="dag-tooltip" style="display: none;"></div>
+                    </div>
+                </div>
+                
+                <!-- Human-In-The-Loop Consent Prompt -->
+                <div id="dag-hitl-panel" class="hitl-consent-panel" style="display: none;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="hitl-shield-icon" style="font-size: 1.5rem;">🛡️</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: var(--accent-amber); font-size: 0.9rem;">Human-in-the-Loop Consent Required</div>
+                            <div id="dag-hitl-message" style="font-size: 0.8rem; color: var(--text-primary); margin-top: 2px;">Researcher Agent wishes to access file system resources at /etc/hosts.</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="primary-btn" id="dag-hitl-allow" style="background: var(--accent-green); font-size: 0.8rem; padding: 6px 12px;">Allow Execution</button>
+                        <button class="primary-btn" id="dag-hitl-deny" style="background: var(--accent-red); font-size: 0.8rem; padding: 6px 12px;">Deny Access</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Sidebar: IPC inter-agent communications -->
+            <aside class="sidebar" style="width: 300px; display: flex; flex-direction: column; gap: 16px;">
+                <div class="glass-panel" style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                    <div class="panel-header">Agent IPC Channel</div>
+                    <div class="agent-chat-stream" id="dag-chat-stream" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding: 4px;">
+                        <div class="chat-placeholder" style="text-align: center; color: var(--text-muted); font-size: 0.8rem; margin-top: 40px; padding: 20px;">
+                            Compile a mission above to establish the multi-agent communication tunnel.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-panel" id="dag-result-card" style="display: none; flex-direction: column;">
+                    <div class="panel-header" style="color: var(--accent-green);">✓ Mission Completed</div>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;" id="dag-result-description">
+                        All validation tests passed. Ready to install package bundle.
+                    </p>
+                    <button class="primary-btn" id="dag-register-bundle-btn" style="width: 100%; margin-bottom: 6px;">Register Workspace Skill</button>
+                    <button class="nav-btn" id="dag-download-bundle-btn" style="width: 100%; text-align: center; justify-content: center; border: 1px solid var(--border-color);">Export Manifest JSON</button>
+                </div>
+            </aside>
         </div>
 
         <!-- ================= MEMORY VAULT VIEW ================= -->
