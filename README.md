@@ -14,13 +14,27 @@ It turns any local hardware (CPU/GPU) into an active agent orchestrator, standar
 
 ---
 
+## Visual Simulator Dashboard Features
+
+The dashboard provides a high-fidelity visual simulator environment built to demonstrate U-AIX OS specifications in action:
+
+1. **Workspace Shell:** Monospace intent shell parsing natural language queries into local execution loops.
+2. **Registry Marketplace:** Search and install secure, sandboxed agent configurations and plugins.
+3. **Skill Builder Compiler:** Code editor and safety compiler scanning ASTs for eval vulnerabilities.
+4. **Autonomous DAG Orchestrator:** Compile multi-agent missions into Directed Acyclic Graphs (DAGs). Features a step-by-step animated execution flow, inter-agent IPC message logs, live resource telemetry, and a simulated **Human-in-the-Loop** consent prompt.
+5. **Memory Vault Graph Network:** 2D canvas force-directed graph to inspect semantic tokens and link custom knowledge nodes.
+6. **Router Telemetry Config:** Connect to a local Ollama node and view active telemetry charts.
+7. **Documentation Hub:** Unified markdown viewer containing full system architecture guides.
+
+---
+
 ## Getting Started
 
 ### 1. Run the Visual Simulator Dashboard
 The repository contains a fully interactive web visualizer simulator detailing the agent runtime execution logs, marketplace installers, memory vaults, and multi-model routing metrics.
 
 To open the dashboard:
-- Simply open the [index.html](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/index.html) file directly in any modern web browser.
+- Simply open the [index.html](index.html) file directly in any modern web browser.
 - Or launch using a local static file server:
   ```bash
   npx http-server ./
@@ -39,22 +53,22 @@ If you have **Ollama** running locally, the web visualizer can automatically est
 ## Repository Documentation Index
 The `/docs` directory contains detailed files for all 14 required specifications:
 
-1. [Full Architecture Design](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/1_architecture.md)
-2. [UI Screens & UX Layout Map](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/2_ui_screens.md)
-3. [Database Design & SQL Schemas](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/3_database_design.md)
-4. [REST & WebSocket API Specs](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/4_apis.md)
-5. [Developer SDK Structure (Python/TS)](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/5_sdk_structure.md)
-6. [Marketplace Logic & Validation ASTs](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/6_marketplace_logic.md)
-7. [Agent State Lifecycle Machine](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/7_agent_lifecycle.md)
-8. [Docker Compose & Kubernetes Deployments](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/8_deployment.md)
-9. [Cost Estimates Comparison](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/9_cost_estimates.md)
-10. [Open Source Growth Strategy Flywheel](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/10_growth_strategy.md)
-11. [Investor Presentation Outline](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/11_investor_deck.md)
-12. [Technical Documents (Memory Sync / Scoring)](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/12_technical_documents.md)
-13. [Competitive Positioning Analysis](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/13_competitive_positioning.md)
-14. [Global GTM Launch Roadmap](file:///d:/current%20project/Universal%20Cross-Platform%20Agentic%20AI%20Ecosystem%20+%20AI%20Operating%20System%20+%20Agent%20Marketplace--%20name%20in%20one%20word/docs/14_global_launch_plan.md)
+1. [Full Architecture Design](docs/1_architecture.md)
+2. [UI Screens & UX Layout Map](docs/2_ui_screens.md)
+3. [Database Design & SQL Schemas](docs/3_database_design.md)
+4. [REST & WebSocket API Specs](docs/4_apis.md)
+5. [Developer SDK Structure (Python/TS)](docs/5_sdk_structure.md)
+6. [Marketplace Logic & Validation ASTs](docs/6_marketplace_logic.md)
+7. [Agent State Lifecycle Machine](docs/7_agent_lifecycle.md)
+8. [Docker Compose & Kubernetes Deployments](docs/8_deployment.md)
+9. [Cost Estimates Comparison](docs/9_cost_estimates.md)
+10. [Open Source Growth Strategy Flywheel](docs/10_growth_strategy.md)
+11. [Investor Presentation Outline](docs/11_investor_deck.md)
+12. [Technical Documents (Memory Sync / Scoring)](docs/12_technical_documents.md)
+13. [Competitive Positioning Analysis](docs/13_competitive_positioning.md)
+14. [Global GTM Launch Roadmap](docs/14_global_launch_plan.md)
 
 ---
 
 ## License
-MIT — 100% Free, Open-Source, and Sovereign.
+MIT — 100% Free, Open-Source, and Sovereign (see [LICENSE](LICENSE)).
