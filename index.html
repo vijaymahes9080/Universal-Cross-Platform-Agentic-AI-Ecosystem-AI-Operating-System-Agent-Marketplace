@@ -198,7 +198,7 @@ async function optimize(context, filepath, quality = 80) {
         <!-- ================= DAG ORCHESTRATOR VIEW ================= -->
         <div class="page-view" id="orchestrator-view" style="flex: 1; display: flex; gap: 16px;">
             <!-- Left panel: Controls & Stats -->
-            <section style="width: 320px; display: flex; flex-direction: column; gap: 16px;">
+            <aside class="sidebar">
                 <div class="glass-panel">
                     <div class="panel-header">DAG Configuration</div>
                     <div class="form-group">
@@ -247,10 +247,10 @@ async function optimize(context, filepath, quality = 80) {
                         <button class="nav-btn" id="dag-reset-btn" style="border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; padding: 0 12px;">Reset</button>
                     </div>
                 </div>
-            </section>
+            </aside>
 
             <!-- Center Panel: Interactive Node Graph Arena -->
-            <section style="flex: 1; display: flex; flex-direction: column; gap: 16px; position: relative;">
+            <section class="workspace-view" style="position: relative;">
                 <div class="glass-panel" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
                     <div class="panel-header">
                         <span>Autonomous Task Decomposition DAG</span>
