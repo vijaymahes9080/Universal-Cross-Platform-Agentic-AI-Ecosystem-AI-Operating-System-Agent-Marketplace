@@ -383,12 +383,25 @@ body {
 .page-view {
     display: none !important;
     flex: 1;
-    flex-direction: column;
     overflow: hidden;
 }
 
 .page-view.active {
     display: flex !important;
+}
+
+/* Specific view layouts */
+#dashboard-view,
+#builder-view,
+#orchestrator-view,
+#memory-view,
+#router-view {
+    flex-direction: row;
+}
+
+#marketplace-view,
+#documentation-view {
+    flex-direction: column;
 }
 
 /* Marketplace Styling */

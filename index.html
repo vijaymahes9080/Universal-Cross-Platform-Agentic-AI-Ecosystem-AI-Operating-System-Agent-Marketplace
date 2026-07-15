@@ -40,7 +40,7 @@
     <main class="app-container">
         
         <!-- ================= WORKSPACE DASHBOARD VIEW ================= -->
-        <div class="page-view active" id="dashboard-view" style="flex: 1; display: flex; gap: 16px;">
+        <div class="page-view active" id="dashboard-view" style="gap: 16px;">
             <!-- Left Sidebar Status -->
             <aside class="sidebar">
                 <!-- System Active Agent Nodes -->
@@ -89,7 +89,7 @@
         </div>
 
         <!-- ================= MARKETPLACE VIEW ================= -->
-        <div class="page-view" id="marketplace-view" style="flex: 1; flex-direction: column;">
+        <div class="page-view" id="marketplace-view">
             <div class="glass-panel" style="margin-bottom: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
@@ -114,7 +114,7 @@
         </div>
 
         <!-- ================= SKILL BUILDER VIEW ================= -->
-        <div class="page-view" id="builder-view" style="flex: 1; display: flex; gap: 16px;">
+        <div class="page-view" id="builder-view" style="gap: 16px;">
             <section style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
                 <div class="glass-panel" style="flex: 1; position: relative;">
                     <div class="panel-header">Skill Manifest & Sandbox Compiler</div>
@@ -196,7 +196,7 @@ async function optimize(context, filepath, quality = 80) {
         </div>
 
         <!-- ================= DAG ORCHESTRATOR VIEW ================= -->
-        <div class="page-view" id="orchestrator-view" style="flex: 1; display: flex; gap: 16px;">
+        <div class="page-view" id="orchestrator-view" style="gap: 16px;">
             <!-- Left panel: Controls & Stats -->
             <aside class="sidebar">
                 <div class="glass-panel">
@@ -305,7 +305,7 @@ async function optimize(context, filepath, quality = 80) {
         </div>
 
         <!-- ================= MEMORY VAULT VIEW ================= -->
-        <div class="page-view" id="memory-view" style="flex: 1; display: flex; gap: 16px;">
+        <div class="page-view" id="memory-view" style="gap: 16px;">
             <!-- Left panel: Form, options & local tokens list -->
             <section style="width: 320px; display: flex; flex-direction: column; gap: 16px;">
                 <div class="glass-panel" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
@@ -377,7 +377,7 @@ async function optimize(context, filepath, quality = 80) {
         </div>
 
         <!-- ================= ROUTER SETTINGS VIEW ================= -->
-        <div class="page-view" id="router-view" style="flex: 1; display: flex; gap: 16px;">
+        <div class="page-view" id="router-view" style="gap: 16px;">
             <section style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
                 <div class="glass-panel">
                     <h2>Multi-Model Router Metrics</h2>
@@ -428,7 +428,7 @@ async function optimize(context, filepath, quality = 80) {
         </div>
 
         <!-- ================= DOCUMENTATION HUB VIEW ================= -->
-        <div class="page-view" id="documentation-view" style="flex: 1;">
+        <div class="page-view" id="documentation-view">
             <div class="glass-panel" style="flex: 1; overflow: hidden;">
                 <div class="doc-hub-container">
                     <aside class="doc-sidebar" id="doc-menu-list">

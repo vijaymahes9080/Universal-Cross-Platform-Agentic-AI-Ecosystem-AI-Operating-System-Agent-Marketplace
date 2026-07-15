@@ -4,6 +4,8 @@ U-AIX OS is a local-first, free, and open-source **AI Operating System, Agent Ma
 
 It turns any local hardware (CPU/GPU) into an active agent orchestrator, standardizes capabilities into installable skill packages, and maintains user sovereignty using an offline-first encrypted vector memory vault.
 
+![U-AIX OS Dashboard Preview](docs/images/dashboard_main.png)
+
 ---
 
 ## Key Pillars
@@ -22,7 +24,9 @@ The dashboard provides a high-fidelity visual simulator environment built to dem
 2. **Registry Marketplace:** Search and install secure, sandboxed agent configurations and plugins.
 3. **Skill Builder Compiler:** Code editor and safety compiler scanning ASTs for eval vulnerabilities.
 4. **Autonomous DAG Orchestrator:** Compile multi-agent missions into Directed Acyclic Graphs (DAGs). Features a step-by-step animated execution flow, inter-agent IPC message logs, live resource telemetry, and a simulated **Human-in-the-Loop** consent prompt.
+   ![Autonomous DAG Orchestrator](docs/images/dag_orchestrator.png)
 5. **Memory Vault Graph Network:** 2D canvas force-directed graph to inspect semantic tokens and link custom knowledge nodes.
+   ![Local Memory Vault Graph](docs/images/memory_vault_graph.png)
 6. **Router Telemetry Config:** Connect to a local Ollama node and view active telemetry charts.
 7. **Documentation Hub:** Unified markdown viewer containing full system architecture guides.
 
